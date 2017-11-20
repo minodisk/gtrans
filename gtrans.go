@@ -15,7 +15,9 @@ import (
 	openbrowser "github.com/haya14busa/go-openbrowser"
 
 	"golang.org/x/oauth2"
+	"google.golang.org/api/option"
 	translate "google.golang.org/api/translate/v2"
+	ghttp "google.golang.org/api/transport/http"
 )
 
 const usageMessage = "" +
@@ -23,7 +25,9 @@ const usageMessage = "" +
 	gtrans translates input text specified by argument or STDIN using Google Translate.
 	Source language will be automatically detected.
 
+	[one of these]
 	export GOOGLE_TRANSLATE_API_KEY=<Your Google Translate API Key>
+	export GOOGLE_TRANSLATE_ACCESS_TOKEN=<Your Google Translate Access Token>
 
 	[optional]
 	export GOOGLE_TRANSLATE_LANG=<default target language (e.g. en, ja, ...)>
@@ -120,12 +124,27 @@ func openGoogleTranslate(w io.Writer, targetLang, text string) error {
 }
 
 func runTranslation(w io.Writer, targetLang, text string) error {
+	var client *http.Client
 	ctx := context.Background()
+
 	apiKey := os.Getenv("GOOGLE_TRANSLATE_API_KEY")
-	if apiKey == "" {
-		return errors.New("GOOGLE_TRANSLATE_API_KEY is not set")
+	accessToken := os.Getenv("GOOGLE_TRANSLATE_ACCESS_TOKEN")
+	if apiKey == "" && accessToken == "" {
+		return errors.New("neither GOOGLE_TRANSLATE_API_KEY nor GOOGLE_TRANSLATE_ACCESS_TOKEN is not set")
 	}
-	service, err := translate.New(oauthClient(ctx, apiKey))
+
+	if apiKey != "" {
+		var err error
+		client, err = ghttpClient(ctx, apiKey)
+		if err != nil {
+			return err
+		}
+	}
+	if accessToken != "" {
+		client = oauthClient(ctx, accessToken)
+	}
+
+	service, err := translate.New(client)
 	if err != nil {
 		return err
 	}
@@ -149,9 +168,14 @@ func runTranslation(w io.Writer, targetLang, text string) error {
 	return nil
 }
 
-func oauthClient(ctx context.Context, apiKey string) *http.Client {
+func ghttpClient(ctx context.Context, apiKey string) (*http.Client, error) {
+	httpClient, _, err := ghttp.NewClient(ctx, option.WithAPIKey(apiKey))
+	return httpClient, err
+}
+
+func oauthClient(ctx context.Context, accessToken string) *http.Client {
 	oauthConfig := &oauth2.Config{}
-	token := &oauth2.Token{AccessToken: apiKey}
+	token := &oauth2.Token{AccessToken: accessToken}
 	httpClient := oauthConfig.Client(ctx, token)
 	return httpClient
 }
