@@ -8,8 +8,9 @@ $ go get github.com/haya14busa/gtrans
 
 ## Setup
 
-### 1) Get Google Translation API key
-- See: https://cloud.google.com/translate/v2/quickstart
+### 1) Get Google Translation API key or OAuth Access Token
+- API Key: https://cloud.google.com/docs/authentication/api-keys
+- Access Token: https://cloud.google.com/translate/v2/quickstart
 
 ### 2) Set Google Translation API key as an envitonment variable along with other options.
 
@@ -17,6 +18,14 @@ Setup example:
 
 ```
 $ echo 'export GOOGLE_TRANSLATE_API_KEY=<Your API KEY>' >> ~/.gtrans.sh
+$ echo 'export GOOGLE_TRANSLATE_LANG=ja' >> ~/.gtrans.sh
+$ echo 'export GOOGLE_TRANSLATE_SECOND_LANG=en' >> ~/.gtrans.sh
+```
+
+or
+
+```
+$ echo 'export GOOGLE_TRANSLATE_ACCESS_TOKEN=<Your Access Token>' >> ~/.gtrans.sh
 $ echo 'export GOOGLE_TRANSLATE_LANG=ja' >> ~/.gtrans.sh
 $ echo 'export GOOGLE_TRANSLATE_SECOND_LANG=en' >> ~/.gtrans.sh
 ```
@@ -39,7 +48,9 @@ Usage:  gtrans [flags] [input text]
         gtrans translates input text specified by argument or STDIN using Google Translate.
         Source language will be automatically detected.
 
+        [one of these]
         export GOOGLE_TRANSLATE_API_KEY=<Your Google Translate API Key>
+        export GOOGLE_TRANSLATE_ACCESS_TOKEN=<Your Google Translate Access Token>
 
         [optional]
         export GOOGLE_TRANSLATE_LANG=<default target language (e.g. en, ja, ...)>
